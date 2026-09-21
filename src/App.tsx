@@ -12,6 +12,7 @@ import { WeeklyReportModal } from './components/WeeklyReportModal';
 import { MetaWhatsAppSignup } from './components/MetaWhatsAppSignup';
 import { WatiWhatsAppSettings } from './components/WatiWhatsAppSettings';
 import { AgentDashboardModal } from './components/AgentDashboardModal';
+import { OnboardingModal } from './components/OnboardingModal';
 import { BusinessProfile } from './types';
 import { LanguageMode, TRANSLATIONS } from './i18n/translations';
 import { db } from './db/schema';
@@ -20,9 +21,13 @@ import { useLiveQuery } from 'dexie-react-hooks';
 export function App() {
   const [selectedProfile, setSelectedProfile] = useState<BusinessProfile>('Mama Mboga');
   const [lang, setLang] = useState<LanguageMode>('SW');
+  const [merchantName, setMerchantName] = useState('Mama Aisha');
+  const [dukaName, setDukaName] = useState('Mama Aisha Mboga Duka');
   const t = TRANSLATIONS[lang];
 
   // Modals state
+  const [isOnboarded, setIsOnboarded] = useState(true);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [isOngezaStockOpen, setIsOngezaStockOpen] = useState(false);
   const [isUzaOpen, setIsUzaOpen] = useState(false);
   const [uzaInitialMode, setUzaInitialMode] = useState<'CASH' | 'DENI'>('CASH');
@@ -75,9 +80,9 @@ export function App() {
         
         {/* FACEBOOK-SIMPLE PERSONAL GREETING FEED CARD */}
         <div className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white p-4 rounded-3xl shadow-md flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-black tracking-tight">{t.greeting}</h2>
-            <p className="text-xs text-emerald-100 font-bold">{t.greetingSubtitle} • MyDukazPOS v2.6.1</p>
+          <div onClick={() => setIsOnboardingOpen(true)} className="cursor-pointer" title="Badilisha Taarifa za Duka">
+            <h2 className="text-2xl font-black tracking-tight">{t.greeting.replace('Mama Aisha', merchantName)}</h2>
+            <p className="text-xs text-emerald-100 font-bold">{dukaName} • Tap kubadilisha setup</p>
           </div>
           
           {/* Agent Badge Quick Launcher */}
@@ -286,6 +291,17 @@ export function App() {
       <AgentDashboardModal
         isOpen={isAgentModalOpen}
         onClose={() => setIsAgentModalOpen(false)}
+      />
+
+      <OnboardingModal
+        isOpen={isOnboardingOpen}
+        onComplete={(mName, pNum, dName, bProfile) => {
+          setMerchantName(mName);
+          setDukaName(dName);
+          setSelectedProfile(bProfile);
+          setIsOnboardingOpen(false);
+          setIsOnboarded(true);
+        }}
       />
 
     </div>

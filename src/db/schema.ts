@@ -1,6 +1,6 @@
 import Dexie, { Table } from 'dexie';
 import { InventoryItem, StockInRecord, SaleRecord, ExpenseRecord, Customer, WabaSettings } from '../types';
-import { PRELOADED_ITEMS } from './initialData';
+import { PRELOADED_ITEMS, PRELOADED_SALES, PRELOADED_EXPENSES, PRELOADED_CUSTOMERS } from './initialData';
 
 export class HustlerDatabase extends Dexie {
   inventory!: Table<InventoryItem>;
@@ -24,10 +24,24 @@ export class HustlerDatabase extends Dexie {
   }
 
   async seedIfEmpty() {
-    const count = await this.inventory.count();
-    if (count === 0) {
+    const invCount = await this.inventory.count();
+    if (invCount === 0) {
       await this.inventory.bulkAdd(PRELOADED_ITEMS);
-      console.log('Seeded 50 default inventory items.');
+    }
+
+    const salesCount = await this.sales.count();
+    if (salesCount === 0) {
+      await this.sales.bulkAdd(PRELOADED_SALES);
+    }
+
+    const expCount = await this.expenses.count();
+    if (expCount === 0) {
+      await this.expenses.bulkAdd(PRELOADED_EXPENSES);
+    }
+
+    const custCount = await this.customers.count();
+    if (custCount === 0) {
+      await this.customers.bulkAdd(PRELOADED_CUSTOMERS);
     }
   }
 }
