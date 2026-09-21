@@ -1,0 +1,14 @@
+{
+  "appId": "com.mamamboga.hustlerpos",
+  "appName": "Mama Mboga POS",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#047857"
+    }
+  }
+}
