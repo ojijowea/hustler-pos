@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PlusCircle, ShoppingBag, BookOpen, Receipt, Package, Sparkles, TrendingUp, Wallet, ArrowDownRight } from 'lucide-react';
+import { PlusCircle, ShoppingBag, BookOpen, Receipt, Package, Sparkles, TrendingUp, Wallet, Award } from 'lucide-react';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { OngezaStockModal } from './components/OngezaStockModal';
@@ -11,6 +11,7 @@ import { FaidaHalisiDashboard } from './components/FaidaHalisiDashboard';
 import { WeeklyReportModal } from './components/WeeklyReportModal';
 import { MetaWhatsAppSignup } from './components/MetaWhatsAppSignup';
 import { WatiWhatsAppSettings } from './components/WatiWhatsAppSettings';
+import { AgentDashboardModal } from './components/AgentDashboardModal';
 import { BusinessProfile } from './types';
 import { LanguageMode, TRANSLATIONS } from './i18n/translations';
 import { db } from './db/schema';
@@ -29,6 +30,7 @@ export function App() {
   const [isWeeklyReportOpen, setIsWeeklyReportOpen] = useState(false);
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
   const [isWatiModalOpen, setIsWatiModalOpen] = useState(false);
+  const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
 
   // Live Inventory & Metrics Query
   const inventory = useLiveQuery(() => 
@@ -75,11 +77,18 @@ export function App() {
         <div className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white p-4 rounded-3xl shadow-md flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-black tracking-tight">{t.greeting}</h2>
-            <p className="text-xs text-emerald-100 font-bold">{t.greetingSubtitle} • MyDukazPOS</p>
+            <p className="text-xs text-emerald-100 font-bold">{t.greetingSubtitle} • MyDukazPOS v2.6.1</p>
           </div>
-          <div className="w-12 h-12 bg-yellow-400 text-slate-950 font-black rounded-2xl text-xl flex items-center justify-center shadow-lg border-2 border-white">
-            MA
-          </div>
+          
+          {/* Agent Badge Quick Launcher */}
+          <button
+            onClick={() => setIsAgentModalOpen(true)}
+            className="bg-yellow-400 hover:bg-yellow-500 text-slate-950 px-3 py-2 rounded-2xl text-xs font-black flex items-center gap-1 shadow-lg transition-transform active:scale-95"
+            title="Agent Portal (AG-ELD-001)"
+          >
+            <Award size={16} />
+            <span>AG-ELD-001</span>
+          </button>
         </div>
 
         {/* FACEBOOK STORY CARDS (SWIPEABLE SUMMARY) */}
@@ -237,7 +246,7 @@ export function App() {
       </main>
 
       {/* MYDUKAZPOS OFFICIAL FOOTER */}
-      <Footer lang={lang} />
+      <Footer lang={lang} onOpenAgentModal={() => setIsAgentModalOpen(true)} />
 
       {/* MODALS */}
       <OngezaStockModal
@@ -272,6 +281,11 @@ export function App() {
         isOpen={isWatiModalOpen}
         onClose={() => setIsWatiModalOpen(false)}
         inventory={inventory}
+      />
+
+      <AgentDashboardModal
+        isOpen={isAgentModalOpen}
+        onClose={() => setIsAgentModalOpen(false)}
       />
 
     </div>
