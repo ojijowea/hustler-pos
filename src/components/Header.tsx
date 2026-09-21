@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Store, Wifi, WifiOff, MessageSquare, Calendar, Globe } from 'lucide-react';
+import { Store, Wifi, WifiOff, MessageSquare, Calendar, ShoppingBag, CheckSquare } from 'lucide-react';
 import { BusinessProfile } from '../types';
 import { LanguageMode } from '../i18n/translations';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -11,8 +11,11 @@ interface HeaderProps {
   onOpenWeeklyReport: () => void;
   onOpenWhatsAppModal: () => void;
   onOpenWatiModal?: () => void;
+  onOpenSokoTab?: () => void;
+  onOpenChecklistModal?: () => void;
   lang: LanguageMode;
   onSelectLang: (lang: LanguageMode) => void;
+  activeTab?: 'HOME' | 'SOKO';
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -21,8 +24,11 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenWeeklyReport,
   onOpenWhatsAppModal,
   onOpenWatiModal,
+  onOpenSokoTab,
+  onOpenChecklistModal,
   lang,
-  onSelectLang
+  onSelectLang,
+  activeTab = 'HOME'
 }) => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const wabaSettings = useLiveQuery(() => db.wabaSettings.toArray());
@@ -76,6 +82,32 @@ export const Header: React.FC<HeaderProps> = ({
             ))}
           </div>
 
+          {/* Soko Tab Button */}
+          {onOpenSokoTab && (
+            <button
+              onClick={onOpenSokoTab}
+              className={`p-2 rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm border transition-all ${
+                activeTab === 'SOKO'
+                  ? 'bg-yellow-400 text-slate-950 border-yellow-400 font-black'
+                  : 'bg-emerald-800 hover:bg-emerald-900 text-yellow-300 border-emerald-600'
+              }`}
+              title="Community Soko Tab"
+            >
+              <ShoppingBag size={16} />
+            </button>
+          )}
+
+          {/* Agent Checklist Launcher */}
+          {onOpenChecklistModal && (
+            <button
+              onClick={onOpenChecklistModal}
+              className="bg-emerald-800 hover:bg-emerald-900 text-emerald-200 p-2 rounded-xl text-xs font-bold flex items-center gap-1 border border-emerald-600 shadow-sm"
+              title="Agent 7-Point Checklist"
+            >
+              <CheckSquare size={16} />
+            </button>
+          )}
+
           {/* Sunday Weekly Report Button */}
           <button
             onClick={onOpenWeeklyReport}
@@ -83,19 +115,6 @@ export const Header: React.FC<HeaderProps> = ({
             title="Ripoti ya Wiki (Sunday Report)"
           >
             <Calendar size={16} />
-          </button>
-
-          {/* WhatsApp Badge */}
-          <button
-            onClick={onOpenWhatsAppModal}
-            className={`p-2 rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm border ${
-              isWhatsAppConnected
-                ? 'bg-emerald-600 text-white border-emerald-400'
-                : 'bg-emerald-800/80 text-emerald-200 border-emerald-600'
-            }`}
-            title="Connect WhatsApp Cloud API"
-          >
-            <MessageSquare size={16} className={isWhatsAppConnected ? 'text-yellow-300' : ''} />
           </button>
 
           {/* Online/Offline Badge */}
