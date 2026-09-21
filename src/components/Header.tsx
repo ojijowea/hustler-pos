@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Store, Wifi, WifiOff, MessageSquare, Calendar, Award } from 'lucide-react';
+import { Store, Wifi, WifiOff, MessageSquare, Calendar, Globe } from 'lucide-react';
 import { BusinessProfile } from '../types';
+import { LanguageMode } from '../i18n/translations';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/schema';
 
@@ -10,6 +11,8 @@ interface HeaderProps {
   onOpenWeeklyReport: () => void;
   onOpenWhatsAppModal: () => void;
   onOpenWatiModal?: () => void;
+  lang: LanguageMode;
+  onSelectLang: (lang: LanguageMode) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -17,7 +20,9 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectProfile,
   onOpenWeeklyReport,
   onOpenWhatsAppModal,
-  onOpenWatiModal
+  onOpenWatiModal,
+  lang,
+  onSelectLang
 }) => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const wabaSettings = useLiveQuery(() => db.wabaSettings.toArray());
@@ -37,19 +42,40 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="bg-emerald-700 text-white shadow-md sticky top-0 z-30">
       <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
+        
+        {/* Logo & MyDukazPOS Brand */}
         <div className="flex items-center gap-2">
-          <div className="bg-yellow-400 p-2 rounded-xl text-emerald-900 shadow">
+          <div className="bg-yellow-400 p-2 rounded-xl text-emerald-950 shadow">
             <Store size={22} className="font-bold" />
           </div>
           <div>
             <h1 className="text-lg font-black tracking-tight leading-none text-white">
-              Mama Mboga <span className="text-yellow-300 font-bold">POS</span>
+              MyDukaz<span className="text-yellow-300 font-bold">POS</span>
             </h1>
-            <p className="text-xs text-emerald-200 font-medium">Offline-First • Swahili Ledger</p>
+            <p className="text-[10px] text-emerald-200 font-bold">info@mydukazpos.com</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Action Controls & Language Switcher */}
+        <div className="flex items-center gap-1.5">
+          
+          {/* Language Toggle Pill: EN / SW / SHENG */}
+          <div className="bg-emerald-900/90 p-0.5 rounded-xl border border-emerald-500/60 flex items-center gap-0.5">
+            {(['SW', 'SHENG', 'EN'] as LanguageMode[]).map((l) => (
+              <button
+                key={l}
+                onClick={() => onSelectLang(l)}
+                className={`px-1.5 py-0.5 rounded-lg text-[10px] font-black transition-all ${
+                  lang === l
+                    ? 'bg-yellow-400 text-slate-950 shadow-xs'
+                    : 'text-emerald-200 hover:text-white'
+                }`}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
+
           {/* Sunday Weekly Report Button */}
           <button
             onClick={onOpenWeeklyReport}
@@ -57,7 +83,6 @@ export const Header: React.FC<HeaderProps> = ({
             title="Ripoti ya Wiki (Sunday Report)"
           >
             <Calendar size={16} />
-            <span className="hidden sm:inline">Ripoti</span>
           </button>
 
           {/* WhatsApp Badge */}
@@ -68,30 +93,28 @@ export const Header: React.FC<HeaderProps> = ({
                 ? 'bg-emerald-600 text-white border-emerald-400'
                 : 'bg-emerald-800/80 text-emerald-200 border-emerald-600'
             }`}
-            title={isWhatsAppConnected ? 'WhatsApp Linked' : 'Connect Meta WhatsApp'}
+            title="Connect WhatsApp Cloud API"
           >
             <MessageSquare size={16} className={isWhatsAppConnected ? 'text-yellow-300' : ''} />
-            <span className="text-[10px] uppercase tracking-wider font-extrabold">
-              {isWhatsAppConnected ? 'WA Active' : '+ WA'}
-            </span>
           </button>
 
-          {/* Online/Offline Status */}
+          {/* Online/Offline Badge */}
           <div
-            className={`px-2 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 ${
-              isOnline ? 'bg-emerald-900 text-emerald-200' : 'bg-red-800 text-red-100 animate-pulse'
+            className={`px-2 py-1 rounded-full text-[9px] font-black flex items-center gap-1 ${
+              isOnline ? 'bg-emerald-950 text-emerald-300' : 'bg-red-800 text-red-100 animate-pulse'
             }`}
           >
-            {isOnline ? <Wifi size={12} /> : <WifiOff size={12} />}
+            {isOnline ? <Wifi size={10} /> : <WifiOff size={10} />}
             <span>{isOnline ? 'ONLINE' : 'OFFLINE'}</span>
           </div>
+
         </div>
       </div>
 
-      {/* Profile Selector Bar */}
+      {/* Duka Profile Selector Bar */}
       <div className="bg-emerald-800/90 border-t border-emerald-600/50 px-3 py-1.5 overflow-x-auto scrollbar-none">
         <div className="max-w-md mx-auto flex items-center gap-1.5 text-xs">
-          <span className="text-emerald-300 text-[11px] font-medium whitespace-nowrap pl-1">Duka Aina:</span>
+          <span className="text-emerald-300 text-[11px] font-medium whitespace-nowrap pl-1">Duka:</span>
           {(['Mama Mboga', 'Duka', 'Chips Kibanda', 'Kinyozi', 'Butchery'] as BusinessProfile[]).map((prof) => (
             <button
               key={prof}

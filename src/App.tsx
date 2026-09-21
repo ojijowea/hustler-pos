@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { PlusCircle, ShoppingBag, BookOpen, Receipt, Package, RefreshCw, Layers } from 'lucide-react';
+import { PlusCircle, ShoppingBag, BookOpen, Receipt, Package, Sparkles, TrendingUp, Wallet, ArrowDownRight } from 'lucide-react';
 import { Header } from './components/Header';
+import { Footer } from './components/Footer';
 import { OngezaStockModal } from './components/OngezaStockModal';
 import { UzaModal } from './components/UzaModal';
 import { DailyStockSlider } from './components/DailyStockSlider';
@@ -11,12 +12,15 @@ import { WeeklyReportModal } from './components/WeeklyReportModal';
 import { MetaWhatsAppSignup } from './components/MetaWhatsAppSignup';
 import { WatiWhatsAppSettings } from './components/WatiWhatsAppSettings';
 import { BusinessProfile } from './types';
+import { LanguageMode, TRANSLATIONS } from './i18n/translations';
 import { db } from './db/schema';
 import { useLiveQuery } from 'dexie-react-hooks';
 
 export function App() {
   const [selectedProfile, setSelectedProfile] = useState<BusinessProfile>('Mama Mboga');
-  
+  const [lang, setLang] = useState<LanguageMode>('SW');
+  const t = TRANSLATIONS[lang];
+
   // Modals state
   const [isOngezaStockOpen, setIsOngezaStockOpen] = useState(false);
   const [isUzaOpen, setIsUzaOpen] = useState(false);
@@ -26,11 +30,25 @@ export function App() {
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
   const [isWatiModalOpen, setIsWatiModalOpen] = useState(false);
 
-  // Live Inventory Query
+  // Live Inventory & Metrics Query
   const inventory = useLiveQuery(() => 
     db.inventory.where('businessProfile').equals(selectedProfile).toArray(),
     [selectedProfile]
   );
+  const sales = useLiveQuery(() => db.sales.toArray());
+  const expenses = useLiveQuery(() => db.expenses.toArray());
+  const customers = useLiveQuery(() => db.customers.filter(c => c.totalDeni > 0).toArray());
+
+  // Metrics for Facebook Story Cards
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todaySales = sales?.filter(s => s.createdAt.startsWith(todayStr)) || [];
+  const todayExpenses = expenses?.filter(e => e.createdAt.startsWith(todayStr)) || [];
+
+  const totalMauzoToday = todaySales.reduce((sum, s) => sum + s.totalAmount, 0);
+  const totalStockCostUsed = todaySales.reduce((sum, s) => sum + s.costBasis, 0);
+  const totalMatumiziToday = todayExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const faidaHalisiToday = totalMauzoToday - totalStockCostUsed - totalMatumiziToday;
+  const totalDeniOutside = customers?.reduce((sum, c) => sum + c.totalDeni, 0) || 0;
 
   const openUzaModal = (mode: 'CASH' | 'DENI') => {
     setUzaInitialMode(mode);
@@ -38,7 +56,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 pb-24 text-gray-900 font-sans">
+    <div className="min-h-screen bg-slate-100 pb-12 text-gray-900 font-sans">
       
       {/* Top Bar Header */}
       <Header
@@ -47,69 +65,117 @@ export function App() {
         onOpenWeeklyReport={() => setIsWeeklyReportOpen(true)}
         onOpenWhatsAppModal={() => setIsWhatsAppModalOpen(true)}
         onOpenWatiModal={() => setIsWatiModalOpen(true)}
+        lang={lang}
+        onSelectLang={setLang}
       />
 
       <main className="max-w-md mx-auto px-4 pt-4 space-y-4">
         
-        {/* BIG ACTION BUTTONS GRID */}
+        {/* FACEBOOK-SIMPLE PERSONAL GREETING FEED CARD */}
+        <div className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white p-4 rounded-3xl shadow-md flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-black tracking-tight">{t.greeting}</h2>
+            <p className="text-xs text-emerald-100 font-bold">{t.greetingSubtitle} • MyDukazPOS</p>
+          </div>
+          <div className="w-12 h-12 bg-yellow-400 text-slate-950 font-black rounded-2xl text-xl flex items-center justify-center shadow-lg border-2 border-white">
+            MA
+          </div>
+        </div>
+
+        {/* FACEBOOK STORY CARDS (SWIPEABLE SUMMARY) */}
+        <div className="grid grid-cols-3 gap-2">
+          
+          {/* Sales Today Story */}
+          <div className="bg-emerald-900 text-white p-3 rounded-2xl shadow-sm border border-emerald-700 flex flex-col justify-between min-h-[90px]">
+            <div className="text-[10px] text-emerald-300 font-black uppercase flex items-center gap-1">
+              <TrendingUp size={12} className="text-emerald-400" /> {t.salesToday}
+            </div>
+            <div className="text-base font-black text-white">
+              KES {totalMauzoToday.toLocaleString()}
+            </div>
+          </div>
+
+          {/* True Profit Story */}
+          <div className="bg-slate-900 text-white p-3 rounded-2xl shadow-sm border border-slate-700 flex flex-col justify-between min-h-[90px]">
+            <div className="text-[10px] text-yellow-400 font-black uppercase flex items-center gap-1">
+              <Sparkles size={12} className="text-yellow-400" /> {t.profitToday}
+            </div>
+            <div className="text-base font-black text-yellow-300">
+              KES {faidaHalisiToday.toLocaleString()}
+            </div>
+          </div>
+
+          {/* Deni Outside Story */}
+          <div className="bg-red-900 text-white p-3 rounded-2xl shadow-sm border border-red-700 flex flex-col justify-between min-h-[90px]">
+            <div className="text-[10px] text-red-200 font-black uppercase flex items-center gap-1">
+              <Wallet size={12} className="text-red-300" /> {t.deniOutside}
+            </div>
+            <div className="text-base font-black text-red-100">
+              KES {totalDeniOutside.toLocaleString()}
+            </div>
+          </div>
+
+        </div>
+
+        {/* 4 BIG BUTTONS BOTTOM (FACEBOOK LIKE/COMMENT STYLE) */}
         <div className="grid grid-cols-2 gap-3">
           
           {/* 1. ONGEZA STOCK */}
           <button
             onClick={() => setIsOngezaStockOpen(true)}
-            className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white p-4 rounded-3xl shadow-lg border border-emerald-500 transition-transform active:scale-95 flex flex-col items-start justify-between min-h-[110px]"
+            className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white p-4 rounded-3xl shadow-lg border border-emerald-500 transition-transform active:scale-95 flex flex-col items-start justify-between min-h-[105px]"
           >
             <div className="p-2 bg-emerald-500/80 rounded-2xl text-yellow-300">
-              <PlusCircle size={28} />
+              <PlusCircle size={26} />
             </div>
             <div>
-              <div className="text-xs font-bold text-emerald-200 uppercase tracking-wider">Kunua Stock</div>
-              <div className="text-xl font-black text-white leading-tight">+ ONGEZA STOCK</div>
+              <div className="text-[10px] font-bold text-emerald-200 uppercase tracking-wider">{t.ongezaStockSub}</div>
+              <div className="text-lg font-black text-white leading-tight">{t.ongezaStockBtn}</div>
             </div>
           </button>
 
           {/* 2. UZA HARAKA */}
           <button
             onClick={() => openUzaModal('CASH')}
-            className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white p-4 rounded-3xl shadow-lg border border-blue-500 transition-transform active:scale-95 flex flex-col items-start justify-between min-h-[110px]"
+            className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white p-4 rounded-3xl shadow-lg border border-blue-500 transition-transform active:scale-95 flex flex-col items-start justify-between min-h-[105px]"
           >
             <div className="p-2 bg-blue-500/80 rounded-2xl text-yellow-300">
-              <ShoppingBag size={28} />
+              <ShoppingBag size={26} />
             </div>
             <div>
-              <div className="text-xs font-bold text-blue-200 uppercase tracking-wider">Lipa Sasa</div>
-              <div className="text-xl font-black text-white leading-tight">UZA HARAKA</div>
+              <div className="text-[10px] font-bold text-blue-200 uppercase tracking-wider">{t.uzaHarakaSub}</div>
+              <div className="text-lg font-black text-white leading-tight">{t.uzaHarakaBtn}</div>
             </div>
           </button>
 
           {/* 3. DENI BOOK (UNMISSABLE RED BUTTON) */}
           <button
             onClick={() => openUzaModal('DENI')}
-            className="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white p-4 rounded-3xl shadow-xl border border-red-500 transition-transform active:scale-95 flex flex-col items-start justify-between min-h-[110px] relative overflow-hidden"
+            className="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white p-4 rounded-3xl shadow-xl border border-red-500 transition-transform active:scale-95 flex flex-col items-start justify-between min-h-[105px] relative overflow-hidden"
           >
-            <div className="absolute top-2 right-2 bg-yellow-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
-              Important!
+            <div className="absolute top-2 right-2 bg-yellow-400 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-full uppercase">
+              Money Maker
             </div>
             <div className="p-2 bg-red-500/80 rounded-2xl text-white">
-              <BookOpen size={28} />
+              <BookOpen size={26} />
             </div>
             <div>
-              <div className="text-xs font-bold text-red-200 uppercase tracking-wider">Kukopesha</div>
-              <div className="text-2xl font-black text-white leading-tight tracking-wide">📕 DENI</div>
+              <div className="text-[10px] font-bold text-red-200 uppercase tracking-wider">{t.deniSub}</div>
+              <div className="text-xl font-black text-white leading-tight">{t.deniBtn}</div>
             </div>
           </button>
 
           {/* 4. MATUMIZI */}
           <button
             onClick={() => setIsMatumiziOpen(true)}
-            className="bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white p-4 rounded-3xl shadow-lg border border-amber-500 transition-transform active:scale-95 flex flex-col items-start justify-between min-h-[110px]"
+            className="bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white p-4 rounded-3xl shadow-lg border border-amber-500 transition-transform active:scale-95 flex flex-col items-start justify-between min-h-[105px]"
           >
             <div className="p-2 bg-amber-500/80 rounded-2xl text-yellow-200">
-              <Receipt size={28} />
+              <Receipt size={26} />
             </div>
             <div>
-              <div className="text-xs font-bold text-amber-200 uppercase tracking-wider">Fare, Rent, Chai</div>
-              <div className="text-xl font-black text-white leading-tight">MATUMIZI</div>
+              <div className="text-[10px] font-bold text-amber-200 uppercase tracking-wider">{t.matumiziSub}</div>
+              <div className="text-lg font-black text-white leading-tight">{t.matumiziBtn}</div>
             </div>
           </button>
 
@@ -118,11 +184,11 @@ export function App() {
         {/* REAL-TIME FAIDA HALISI DASHBOARD */}
         <FaidaHalisiDashboard />
 
-        {/* NIGHT STOCK MEASUREMENT SLIDER ("Nyanya zimebaki ngapi?") */}
+        {/* NIGHT STOCK MEASUREMENT SLIDER */}
         <DailyStockSlider selectedProfile={selectedProfile} />
 
         {/* DENI BOOK LIST */}
-        <DeniBook onOpenNewDeniModal={() => openUzaModal('DENI')} />
+        <DeniBook onOpenNewDeniModal={() => openUzaModal('DENI')} lang={lang} />
 
         {/* INVENTORY STOCK TABLE */}
         <div className="bg-white rounded-3xl p-5 shadow-xl border border-gray-100 my-4">
@@ -169,6 +235,9 @@ export function App() {
         </div>
 
       </main>
+
+      {/* MYDUKAZPOS OFFICIAL FOOTER */}
+      <Footer lang={lang} />
 
       {/* MODALS */}
       <OngezaStockModal
